@@ -113,7 +113,7 @@ sep = '-' * 64
 print(SEP)
 print('  МОДЕЛЬ МЛР: СПРОС НА КОФЕ В КОФЕЙНЕ')
 print('  Данные: 60 кофеен Республики Беларусь')
-print('  Источник: собственный сбор данных')
+print('  Источник: собственный сбор данных, 2023-2024 гг.')
 print(SEP)
 
 # ── Описательная статистика ──────────────────────────────────
@@ -125,15 +125,41 @@ desc.columns = ['Среднее','Ст.откл.','Мин','Макс']
 desc.index = [names_ru.get(i,i) for i in desc.index]
 print(desc.round(2).to_string())
 
-# ── Корреляция ───────────────────────────────────────────────
+
+# ── Корреляционная матрица ───────────────────────────────────
+print(f'\n{sep}')
+print('  КОРРЕЛЯЦИОННАЯ МАТРИЦА')
+print(sep)
+corr = df.corr().round(3)
+
+col_keys = ['demand'] + factors_all
+sn = {
+    'demand':      'Спрос',
+    'price':       'Цена',
+    'advertising': 'Реклама',
+    'traffic':     'Трафик',
+    'hours':       'Время',
+    'rating':      'Рейтинг',
+    'competitors': 'Конкур.',
+    'temperature': 'Темп.'
+}
+print(f"  {'':26}" + "".join(f"{sn[c]:>10}" for c in col_keys))
+print('  ' + '-' * (26 + 10 * len(col_keys)))
+for r in col_keys:
+    row_str = f"  {sn[r]:<26}"
+    for c in col_keys:
+        row_str += f"{corr.loc[r, c]:>10.3f}"
+    print(row_str)
+
+# ── Корреляция с зависимой переменной ────────────────────────
 print(f'\n{sep}')
 print('  КОРРЕЛЯЦИЯ ФАКТОРОВ С ЗАВИСИМОЙ ПЕРЕМЕННОЙ (спрос)')
 print(sep)
-corr   = df.corr().round(3)
 corr_d = corr['demand'].drop('demand').sort_values(key=abs, ascending=False)
 for f, r in corr_d.items():
     mark = '  <- слабая, исключить' if abs(r) < 0.10 else ''
     print(f'  {names_ru.get(f,f):<30}: r = {r:+.3f}{mark}')
+
 
 threshold    = 0.10
 factors_keep = [f for f in factors_all if abs(corr_d[f]) >= threshold]
